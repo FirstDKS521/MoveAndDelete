@@ -17,9 +17,6 @@
 @property (nonatomic, assign) CGPoint movePoint; //移动的中心点
 @property (nonatomic, strong) UIView *moveView; //移动的视图
 
-//@property (nonatomic, strong) NSMutableArray *selectArray; //选择的数据源
-//@property (nonatomic, strong) NSMutableArray *unSelectArray; //未选择的数据源
-
 @end
 
 @implementation SYLifeManagerLayout
@@ -41,17 +38,6 @@
     }
     return self;
 }
-
-//- (id)initWithSelectItems:(NSArray *)selectItems unSelectItems:(NSArray *)unSelectItems
-//{
-//    self = [super init];
-//    if (self) {
-//        self.selectArray = [selectItems mutableCopy];
-//        self.unSelectArray = [unSelectItems mutableCopy];
-//        [self configureObserver];
-//    }
-//    return self;
-//}
 
 #pragma mark - 添加观察者
 
@@ -90,41 +76,47 @@
         [self setInEditState:YES];
     }
     switch (gesture.state) {
-        case UIGestureRecognizerStateBegan: {
+        case UIGestureRecognizerStateBegan: {  //手势开始
             CGPoint location = [gesture locationInView:self.collectionView];
+            //找到当前点击的cell的位置
             NSIndexPath *indexPath = [self.collectionView indexPathForItemAtPoint:location];
-            //如果
+            //判断哪个分区可以被点击并且移动
             if (indexPath == nil || indexPath.section != 0) return;
             self.currentIndexPath = indexPath;
             UICollectionViewCell *targetCell = [self.collectionView cellForItemAtIndexPath:self.currentIndexPath];
             //得到当前cell的映射(截图)
             self.moveView = [targetCell snapshotViewAfterScreenUpdates:YES];
+            //隐藏被点击的cell
             targetCell.hidden = YES;
+            //给截图添加上边框，如果不添加的话，截图有一部分是没有边框的，具体原因也没有找到
             self.moveView.layer.borderWidth = 0.5;
             self.moveView.layer.borderColor = [UIColor grayColor].CGColor;
             [self.collectionView addSubview:self.moveView];
+            //放大截图
             self.moveView.transform = CGAffineTransformMakeScale(1.1, 1.1);
             self.moveView.center = targetCell.center;
         }
             break;
-        case UIGestureRecognizerStateChanged: {
+        case UIGestureRecognizerStateChanged: { //手势在变化
             CGPoint point = [gesture locationInView:self.collectionView];
             //更新cell的位置
             self.moveView.center = point;
             NSIndexPath *indexPath = [self.collectionView indexPathForItemAtPoint:point];
             if (indexPath == nil)  return;
             if (indexPath.section == self.currentIndexPath.section && indexPath.section == 0) {
-                //改变数据源
-//                if ([self.delegate respondsToSelector:@selector(moveDataItem:toIndexPath:)]) {
-//                    [self.delegate moveDataItem:self.currentIndexPath toIndexPath:indexPath];
-//                }
+                //通过代理去改变数据源
+                if ([self.delegate respondsToSelector:@selector(moveItemAtIndexPath:toIndexPath:)]) {
+                    [self.delegate moveItemAtIndexPath:self.currentIndexPath toIndexPath:indexPath];
+                }
+                //移动的方法
                 [self.collectionView moveItemAtIndexPath:self.currentIndexPath toIndexPath:indexPath];
                 self.currentIndexPath = indexPath;
             }
         }
             break;
-        case UIGestureRecognizerStateEnded: {
+        case UIGestureRecognizerStateEnded: {  //手势结束
             UICollectionViewCell *cell = [self.collectionView cellForItemAtIndexPath:self.currentIndexPath];
+            //手势结束后，把截图隐藏，显示出原先的cell
             [UIView animateWithDuration:0.25 animations:^{
                 self.moveView.center = cell.center;
             } completion:^(BOOL finished) {
@@ -132,6 +124,7 @@
                 cell.hidden = NO;
                 self.moveView = nil;
                 self.currentIndexPath = nil;
+                [self.collectionView reloadData];
             }];
         }
             break;
@@ -145,21 +138,7 @@
 - (void)setInEditState:(BOOL)inEditState
 {
     if (_inEditState != inEditState) {
-//        for (SYLifeManagerCell *cell in self.collectionView.visibleCells) {
-//            cell.inEditState = inEditState;
-//            NSIndexPath *indexPath = [self.collectionView indexPathForCell:cell];
-//            SYLifeManagerModel *model;
-//            BOOL exist = NO;
-//            if (indexPath.section == 0) {
-//                model = self.selectArray[indexPath.row];
-//                if ([self.unSelectArray containsObject:model]) {
-//                    exist = YES;
-//                }
-//            } else {
-//                model = self.selectArray[indexPath.row];
-//            }
-//            [cell setModel:model indexPaht:indexPath exist:exist];
-//        }
+        //通过代理方法改变处于编辑状态的cell
         if (_delegate && [_delegate respondsToSelector:@selector(didChangeEditState:)]) {
             [_delegate didChangeEditState:inEditState];
         }

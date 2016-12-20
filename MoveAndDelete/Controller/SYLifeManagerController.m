@@ -52,20 +52,15 @@
         [self.groupArray addObject:model];
     }
     [self.view addSubview:self.collectionView];
-}
-
-- (void)viewWillAppear:(BOOL)animated
-{
-    [super viewWillAppear:animated];
-    self.navigationController.navigationBarHidden = NO;
+    [self addRightBarButtonItem]; //添加右边的编辑按钮
 }
 
 #pragma mark - 添加右边的编辑按钮
 
-- (void)addRightBarButtonItem:(NSString *)titleStr
+- (void)addRightBarButtonItem
 {
     self.rightBtn = [UIButton buttonWithType:UIButtonTypeCustom];
-    [_rightBtn setTitle:titleStr forState:UIControlStateNormal];
+    [_rightBtn setTitle:@"管理" forState:UIControlStateNormal];
     [_rightBtn addTarget:self action:@selector(rightBarButtonItemAction:) forControlEvents:UIControlEventTouchUpInside];
     [_rightBtn sizeToFit];
     [_rightBtn setTitle:@"完成" forState:UIControlStateSelected];
@@ -85,19 +80,17 @@
     self.rightBtn.selected = inEditState;
     for (SYLifeManagerCell *cell in self.collectionView.visibleCells) {
         cell.inEditState = inEditState;
-        NSIndexPath *indexPath = [self.collectionView indexPathForCell:cell];
-        SYLifeManagerModel *model;
-        BOOL exist = NO;
-        if (indexPath.section == 0) {
-            model = self.dataArray[indexPath.row];
-        } else {
-            model = self.groupArray[indexPath.row];
-            if ([self.dataArray containsObject:model]) {
-                exist = YES;
-            }
-        }
-        [cell setModel:model indexPaht:indexPath exist:exist];
     }
+}
+
+//改变数据源中model的位置
+- (void)moveItemAtIndexPath:(NSIndexPath *)formPath toIndexPath:(NSIndexPath *)toPath
+{
+    SYLifeManagerModel *model = self.dataArray[formPath.row];
+    //先把移动的这个model移除
+    [self.dataArray removeObject:model];
+    //再把这个移动的model插入到相应的位置
+    [self.dataArray insertObject:model atIndex:toPath.row];
 }
 
 #pragma mark - 右边的编辑按钮方法
@@ -110,6 +103,8 @@
     } else { //点击了完成
         self.inEditState = NO;
         self.collectionView.allowsSelection = YES;
+        //此处可以调用网络请求，把排序完之后的传给服务端
+        NSLog(@"点击了完成按钮");
     }
     [self.flowLayout setInEditState:self.inEditState];
 }
@@ -118,6 +113,7 @@
 
 - (void)btnClick:(UIButton *)sender event:(id)event
 {
+    //获取点击button的位置
     NSSet *touches = [event allTouches];
     UITouch *touch = [touches anyObject];
     CGPoint currentPoint = [touch locationInView:_collectionView];
@@ -177,12 +173,13 @@
 - (void)collectionView:(UICollectionView *)collectionView didSelectItemAtIndexPath:(NSIndexPath *)indexPath
 {
     if (!self.inEditState) { //如果不在编辑状态
-        
+        NSLog(@"点击了第%@个分区的第%@个cell", @(indexPath.section), @(indexPath.row));
     }
 }
 
 #pragma mark - HeaderAndFooter
 
+//区头区尾视图
 - (UICollectionReusableView *)collectionView:(UICollectionView *)collectionView viewForSupplementaryElementOfKind:(NSString *)kind atIndexPath:(NSIndexPath *)indexPath
 {
     if ([kind isEqualToString:UICollectionElementKindSectionHeader]) {
@@ -207,6 +204,7 @@
         if (section == 0) {
             CGFloat width = (Screen_Width - 80) / 4;
             self.messageLabel.frame = CGRectMake(0, 30, Screen_Width, width);
+            //显示没有更多的提示
             [self.collectionView addSubview:self.messageLabel];
             return CGSizeMake(Screen_Width, 25 + width);
         } else {
@@ -224,7 +222,7 @@
     if (section == 0) {
         return CGSizeMake(Screen_Width, 10);
     } else {
-        return CGSizeMake(Screen_Width, 0.01);
+        return CGSizeMake(Screen_Width, 0.5);
     }
 }
 
@@ -284,6 +282,7 @@
     return _groupArray;
 }
 
+//没有应用的提示
 - (UILabel *)messageLabel
 {
     if (!_messageLabel) {

@@ -10,18 +10,21 @@
 
 @protocol SYLifeManagerDelegate <NSObject>
 
-//去改变数据源
-//- (void)moveDataItem:(NSIndexPath *)fromIndexPath toIndexPath:(NSIndexPath *)toIndexPath;
+/**
+ * 更新数据源
+ */
+- (void)moveItemAtIndexPath:(NSIndexPath *)formPath toIndexPath:(NSIndexPath *)toPath;
 
+/**
+ * 改变编辑状态
+ */
 - (void)didChangeEditState:(BOOL)inEditState;
 
 @end
 
 @interface SYLifeManagerLayout : UICollectionViewFlowLayout
 
-@property (nonatomic, assign) BOOL inEditState;
+@property (nonatomic, assign) BOOL inEditState; //检测是否处于编辑状态
 @property (nonatomic, weak) id<SYLifeManagerDelegate> delegate;
-
-//- (id)initWithSelectItems:(NSArray *)selectItems unSelectItems:(NSArray *)unSelectItems;
 
 @end

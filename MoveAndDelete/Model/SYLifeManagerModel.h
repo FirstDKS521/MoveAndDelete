@@ -10,6 +10,9 @@
 
 @interface SYLifeManagerModel : NSObject
 
+/**
+ * 标题
+ */
 @property (nonatomic, copy) NSString *title;
 
 @end
