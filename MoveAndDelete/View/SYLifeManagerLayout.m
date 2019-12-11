@@ -81,8 +81,8 @@
             //找到当前点击的cell的位置
             NSIndexPath *indexPath = [self.collectionView indexPathForItemAtPoint:location];
             //判断哪个分区可以被点击并且移动
-            if (indexPath == nil || indexPath.section != 0) return;
             self.currentIndexPath = indexPath;
+            if (indexPath == nil || indexPath.section != 0) return;
             UICollectionViewCell *targetCell = [self.collectionView cellForItemAtIndexPath:self.currentIndexPath];
             //得到当前cell的映射(截图)
             self.moveView = [targetCell snapshotViewAfterScreenUpdates:YES];
